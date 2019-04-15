@@ -36,6 +36,7 @@
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
             android:height="102dp"
+            android:onClick="start"
             android:text="Start"
             android:textSize="24sp" />
 
