@@ -20,6 +20,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service android:name=".services.AccelerometerSensorService" android:enabled="true"/>
+        <service android:name=".services.SmsService" android:enabled="true" />
     </application>
 
 </manifest>

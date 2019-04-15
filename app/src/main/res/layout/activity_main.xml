@@ -6,31 +6,38 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <RelativeLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="fill_parent"
+        android:layout_height="match_parent"
         android:orientation="vertical">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
 
         <TextView
             android:id="@+id/statusText"
-            android:text="Status"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:text="Status"
+            android:textSize="28sp"
+            android:textAlignment="center" />
 
         <Space
-            android:id="@+id/space1"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:layout_below="@id/statusText"/>
+            android:layout_width="match_parent"
+            android:layout_weight="1"
+            android:layout_height="match_parent" />
 
         <Button
             android:id="@+id/startButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:height="102dp"
             android:text="Start"
-            android:textSize="24sp"
-            android:layout_below="@id/space1"/>
+            android:textSize="24sp" />
 
         <Button
             android:id="@+id/settingsButton"
@@ -39,7 +46,8 @@
             android:layout_marginLeft="50dp"
             android:layout_marginTop="10dp"
             android:layout_marginRight="50dp"
-            android:text="Settings"
-            android:layout_below="@id/startButton"/>
-    </RelativeLayout>
+            android:layout_marginBottom="50dp"
+            android:onClick="showSettings"
+            android:text="Settings" />
+    </LinearLayout>
 </android.support.constraint.ConstraintLayout>
