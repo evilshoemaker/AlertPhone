@@ -1,14 +1,9 @@
 package ru.digios.alertphone.services;
 
 import android.Manifest;
-import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.Service;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
-import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -21,9 +16,17 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-import ru.digios.alertphone.core.AlarmStatus;
+import ru.digios.alertphone.R;
+import ru.digios.alertphone.core.SoundManager;
+import ru.digios.alertphone.core.Util;
 
 public class MainService extends Service {
+
+    private static final String SERVER_MESSAGE_ALARM_ON = "alarm_on";
+    private static final String SERVER_MESSAGE_ALARM_OFF = "alarm_off";
+    private static final String DEVICE_MESSAGE_ALARM_READY = "alarm_ready";
+    private static final String DEVICE_MESSAGE_ALARM_ON = "alarm_on";
+    private static final String DEVICE_MESSAGE_ALARM = "alarm";
 
     public static final int ALARM_STATUS_ALARM = 10;
     public static final int ALARM_STATUS_READY = 11;
@@ -32,14 +35,20 @@ public class MainService extends Service {
 
     public static final String COMMAND_ALARM_START = "ALARM_ON";
     public static final String COMMAND_ALARM_STOP = "ALARM_OFF";
+    public static final String COMMAND_EXEC_MESSAGE = "INCOME_MESSAGE";
+    public static final String COMMAND_THRESSHOLD_TRIGGER = "THRESSHOLD_TRIGGER";
 
     public static final int MSG_REGISTER_CLIENT = 1;
     public static final int MSG_UNREGISTER_CLIENT = 2;
-    //public static final int MSG_SET_VALUE = 3;
     public static final int MSG_SET_ALARM_STATUS = 4;
+    public static final int MSG_GET_ALARM_STATUS = 5;
 
     private String serverPhoneNumber;
-    private int currentStatus;
+    private int alarmCount;
+    private long alarmInterval;
+    private float shakeThreshold;
+    private int currentStatus = ALARM_STATUS_OFF;
+    private SoundManager soundManager = new SoundManager();
 
     ArrayList<Messenger> nClients = new ArrayList<Messenger>();
 
@@ -62,6 +71,15 @@ public class MainService extends Service {
                         }
                     }
                     break;
+                case MSG_GET_ALARM_STATUS:
+                    for (int i=nClients.size()-1; i>=0; i--) {
+                        try {
+                            nClients.get(i).send(Message.obtain(null, MSG_SET_ALARM_STATUS, currentStatus, 0));
+                        } catch (RemoteException e) {
+                            nClients.remove(i);
+                        }
+                    }
+                    break;
                 default:
                     super.handleMessage(msg);
             }
@@ -70,18 +88,9 @@ public class MainService extends Service {
 
     final Messenger messenger = new Messenger(new IncomingHandler());
 
-    /*private final IBinder binder = new LocalBinder();
-
-    public class LocalBinder extends Binder {
-        MainService getService() {
-            return MainService.this;
-        }
-    }*/
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        //return binder;
         return messenger.getBinder();
     }
 
@@ -96,8 +105,7 @@ public class MainService extends Service {
     }
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
             return Service.START_STICKY;
         }
@@ -105,25 +113,65 @@ public class MainService extends Service {
         String method = intent.getStringExtra("command");
         if (method.equals(COMMAND_ALARM_START))
         {
-            alarmOn();
-            //serverPhoneNumber = intent.getStringExtra("serverPhoneNumber");
+            serverPhoneNumber = Util.clearPhone(intent.getStringExtra("serverPhoneNumber"));
+            alarmInterval = intent.getLongExtra("alarmInterval", 3000);
+            alarmCount = intent.getIntExtra("alarmCount", 5);
+            shakeThreshold = intent.getFloatExtra("shakeThreshold", 2.7f);
+
+            soundManager.setAlarmCount(alarmCount);
+            soundManager.setInterval(alarmInterval);
+
+            alarmReady();
         }
         else if (method.equals(COMMAND_ALARM_STOP))
         {
+            alarmOff();
+        }
+        else if (method.equals(COMMAND_EXEC_MESSAGE))
+        {
+            String phoneNumber = intent.getStringExtra("phoneNumber");
+            String message = intent.getStringExtra("message");
 
+            handlingMessageAsync(phoneNumber, message);
+        }
+        else if (method.equals(COMMAND_THRESSHOLD_TRIGGER))
+        {
+            alarm();
         }
 
         return Service.START_STICKY;
     }
 
-    private void alarmOn() {
+    private void alarmReady() {
         setStatus(ALARM_STATUS_READY);
-        //currentStatus = AlarmStatus.ALARM_READY;
+
+        sendMessageAsync(serverPhoneNumber, DEVICE_MESSAGE_ALARM_READY);
+
+        Intent accelerometrSensorService = new Intent(this, AccelerometerSensorService.class);
+        accelerometrSensorService.putExtra("shakeThreshold", shakeThreshold);
+        startService(accelerometrSensorService);
+    }
+
+    private void alarmOn() {
+        setStatus(ALARM_STATUS_ON);
+        sendMessageAsync(serverPhoneNumber, DEVICE_MESSAGE_ALARM_ON);
+    }
+
+    private void alarm() {
+        if (currentStatus != ALARM_STATUS_ON)
+            return;
+
+        setStatus(ALARM_STATUS_ALARM);
+        sendMessageAsync(serverPhoneNumber, DEVICE_MESSAGE_ALARM);
+    }
+
+    private void alarmReset() {
+
     }
 
     private void alarmOff() {
+        alarmReset();
         setStatus(ALARM_STATUS_OFF);
-        //currentStatus = AlarmStatus.ALARM_OFF;
     }
 
     private void setStatus(int status) {
@@ -133,20 +181,18 @@ public class MainService extends Service {
             Message msg = Message.obtain(null, MainService.MSG_SET_ALARM_STATUS, currentStatus, 0);
             messenger.send(msg);
         }
-        catch (Exception ex) {
-
-        }
+        catch (Exception ex) { }
     }
 
-    /*private void sendMessageAsync(String phoneNumber, String message) {
+    private void sendMessageAsync(final String phoneNumber, final String message) {
         new Thread(new Runnable() {
             public void run () {
                 sendMessage(phoneNumber, message);
             }
         }).start();
-    }*/
+    }
 
-    private void sendMessage(String phoneNumber, String message) {
+    private void sendMessage(final String phoneNumber, final String message) {
         if (ContextCompat.checkSelfPermission(this,
                 Manifest.permission.SEND_SMS)
                 == PackageManager.PERMISSION_GRANTED)
@@ -156,6 +202,37 @@ public class MainService extends Service {
         }
         else {
             Log.w("","SEND_SMS_PERMISSION_DENIED");
+        }
+    }
+
+    private void handlingMessageAsync(final String phoneNumber, final String message) {
+        new Thread(new Runnable() {
+            public void run () {
+                handlingMessage(phoneNumber, message);
+            }
+        }).start();
+    }
+
+    private void handlingMessage(final String phoneNumber, final String message) {
+        String simplePhone = Util.clearPhone(phoneNumber);
+        String simpleMessage = message.toLowerCase();
+
+        if (serverPhoneNumber != null && !simplePhone.equals(serverPhoneNumber)
+                || currentStatus == ALARM_STATUS_OFF)
+            return;
+
+        if (currentStatus == ALARM_STATUS_READY
+                && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_ON) > -1) {
+            alarmOn();
+        }
+        else if (currentStatus == ALARM_STATUS_ON
+                && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_OFF) > -1) {
+            alarmReady();
+        }
+        else if (currentStatus == ALARM_STATUS_ALARM
+                && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_OFF) > -1) {
+            alarmReset();
+            alarmReady();
         }
     }
 }

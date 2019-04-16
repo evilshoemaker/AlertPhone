@@ -8,8 +8,7 @@ import android.telephony.SmsMessage;
 
 import java.util.Calendar;
 
-import ru.digios.alertphone.services.SmsService;
-import ru.digios.alertphone.services.SmsToReceive;
+import ru.digios.alertphone.services.MainService;
 
 public class SmsReceiver extends BroadcastReceiver {
     private static final String ACTION = "android.provider.Telephony.SMS_RECEIVED";
@@ -30,7 +29,7 @@ public class SmsReceiver extends BroadcastReceiver {
                         text += msgs[i].getMessageBody().toString();
                     }
 
-                    SmsToReceive message = new SmsToReceive();
+                    /*SmsToReceive message = new SmsToReceive();
                     message.setPhoneNumber(msgs[0].getOriginatingAddress());
                     message.setText(text);
 
@@ -40,6 +39,11 @@ public class SmsReceiver extends BroadcastReceiver {
 
                     Intent mIntent = new Intent(context, SmsService.class);
                     mIntent.putExtra("message", message);
+                    context.startService(mIntent);*/
+                    Intent mIntent = new Intent(context, MainService.class);
+                    mIntent.putExtra("command", MainService.COMMAND_EXEC_MESSAGE);
+                    mIntent.putExtra("phoneNumber", msgs[0].getOriginatingAddress());
+                    mIntent.putExtra("message", text);
                     context.startService(mIntent);
                 }
             }

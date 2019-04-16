@@ -17,31 +17,23 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
-import android.widget.NumberPicker;
 import android.widget.TextView;
-
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import android.widget.Toast;
 
 import ru.digios.alertphone.core.Settings;
-import ru.digios.alertphone.services.AccelerometerSensorService;
 import ru.digios.alertphone.services.MainService;
-import ru.digios.alertphone.services.SmsService;
-import ru.digios.alertphone.services.SmsToSend;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
+    private static final int PERMISSIONS_REQUEST_SEND_SMS = 0;
 
     private int currentAlarmStatus;
 
     private Messenger mainService = null;
 
+    private Button startButton = null;
     private TextView statusText = null;
-
     private EditText serverPhoneEdit = null;
     private EditText alarmIntervalEdit = null;
     private EditText alarmCountEdit = null;
@@ -52,6 +44,9 @@ public class MainActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MainService.MSG_SET_ALARM_STATUS:
+                    setStatus(msg.arg1);
+                    break;
+                case MainService.MSG_GET_ALARM_STATUS:
                     setStatus(msg.arg1);
                     break;
                 default:
@@ -74,10 +69,8 @@ public class MainActivity extends AppCompatActivity {
                 msg.replyTo = messenger;
                 mainService.send(msg);
 
-                // Give it some value as an example.
-                /*msg = Message.obtain(null,
-                        MessengerService.MSG_SET_VALUE, this.hashCode(), 0);
-                mService.send(msg);*/
+                msg = Message.obtain(null, MainService.MSG_GET_ALARM_STATUS, 0, 0);
+                mainService.send(msg);
             } catch (RemoteException e) {
 
             }
@@ -99,9 +92,6 @@ public class MainActivity extends AppCompatActivity {
         requestPermissions();
 
         bindService(new Intent(MainActivity.this, MainService.class), mainServiceConnection, Context.BIND_AUTO_CREATE);
-
-        /*Intent accelerometrSensorService = new Intent(this, AccelerometerSensorService.class);
-        startService(accelerometrSensorService);*/
     }
 
     @Override
@@ -146,8 +136,17 @@ public class MainActivity extends AppCompatActivity {
     public void start(View view)
     {
         if (currentAlarmStatus == MainService.ALARM_STATUS_OFF) {
+            if (!checkSettings())
+                return;
+
+            saveSettings();
+
             Intent service = new Intent(this, MainService.class);
             service.putExtra("command", MainService.COMMAND_ALARM_START);
+            service.putExtra("serverPhoneNumber", Settings.getInstance(this).getServerPhone());
+            service.putExtra("alarmInterval", Settings.getInstance(this).getAlarmInterval());
+            service.putExtra("alarmCount", Settings.getInstance(this).getAlarmCount());
+            service.putExtra("shakeThreshold", Settings.getInstance(this).getShakeThreshold());
             startService(service);
         }
         else {
@@ -166,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
         shakeThresholdEdit = findViewById(R.id.shakeThresholdEdit);
 
         statusText = findViewById(R.id.statusText);
+        startButton = findViewById(R.id.startButton);
     }
 
     private void requestPermissions()
@@ -183,13 +183,22 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.SEND_SMS},
-                        MY_PERMISSIONS_REQUEST_SEND_SMS);
+                        PERMISSIONS_REQUEST_SEND_SMS);
             }
         }
     }
 
     private void setStatus(int status) {
         currentAlarmStatus = status;
+
+        if (status != MainService.ALARM_STATUS_OFF) {
+            setEnableSettings(false);
+            startButton.setText("Stop");
+        }
+        else {
+            setEnableSettings(true);
+            startButton.setText("Start");
+        }
 
         switch (status) {
             case MainService.ALARM_STATUS_ALARM:
@@ -209,5 +218,26 @@ public class MainActivity extends AppCompatActivity {
                 break;
 
         }
+    }
+
+    private boolean checkSettings() {
+        if (serverPhoneEdit.getText().toString().isEmpty()) {
+            showMessage("Server phone is empty");
+            return false;
+        }
+
+        return true;
+    }
+
+    private void showMessage(String text) {
+        Toast toast = Toast.makeText(this, text, Toast.LENGTH_SHORT);
+        toast.show();
+    }
+
+    private void setEnableSettings(boolean isEnable) {
+        serverPhoneEdit.setEnabled(isEnable);
+        alarmIntervalEdit.setEnabled(isEnable);
+        alarmCountEdit.setEnabled(isEnable);
+        shakeThresholdEdit.setEnabled(isEnable);
     }
 }

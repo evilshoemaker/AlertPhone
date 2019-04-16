@@ -36,8 +36,6 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     Sensor accelerometer = null;
     SensorManager sm = null;
 
-
-
     private PowerManager.WakeLock wakeLock;
 
     @Nullable
@@ -63,13 +61,18 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     @Override
     public void onDestroy() {
         super.onDestroy();
-
         //wakeLock.release();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
+        if (intent == null) {
+            return Service.START_STICKY;
+        }
+
+        shakeThreshold = intent.getFloatExtra("shakeThreshold", 2.7f);
+
         return Service.START_STICKY;
     }
 
@@ -93,9 +96,7 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     }
 
     @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-
-    }
+    public void onAccuracyChanged(Sensor sensor, int i) { }
 
     private void updateAccelParameters(float xNewAcccel, float yNewAccel, float zNewAccell)
     {
@@ -131,62 +132,8 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
 
     private void executeShackeAction()
     {
-        /*Intent settingsActivity = new Intent(this, SettingsActivity.class);
-        settingsActivity.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(settingsActivity);*/
-        try {
-            String val = readFromFile(this);
-            int v = Integer.parseInt(val);
-            v++;
-
-            writeToFile(String.valueOf(v), this);
-        }
-        catch (Exception ex)
-        {
-            writeToFile("1", this);
-        }
-
-
-    }
-
-    private void writeToFile(String data, Context context) {
-        try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("config.txt", Context.MODE_PRIVATE));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-        }
-    }
-
-    private String readFromFile(Context context)
-    {
-        String ret = "";
-
-        try {
-            InputStream inputStream = context.openFileInput("config.txt");
-
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
-        }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        return ret;
+        Intent intent = new Intent(this, MainService.class);
+        intent.putExtra("command", MainService.COMMAND_THRESSHOLD_TRIGGER);
+        startService(intent);
     }
 }

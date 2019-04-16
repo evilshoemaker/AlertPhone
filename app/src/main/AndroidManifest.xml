@@ -26,7 +26,6 @@
         </activity>
 
         <service android:name=".services.AccelerometerSensorService" android:enabled="true"/>
-        <service android:name=".services.SmsService" android:enabled="true" />
         <service android:name=".services.MainService" android:enabled="true" />
 
         <receiver android:name=".receivers.SmsReceiver">
