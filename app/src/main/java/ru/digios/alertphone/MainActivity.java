@@ -1,9 +1,16 @@
 package ru.digios.alertphone;
 
 import android.Manifest;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -22,16 +29,66 @@ import java.io.InputStreamReader;
 
 import ru.digios.alertphone.core.Settings;
 import ru.digios.alertphone.services.AccelerometerSensorService;
+import ru.digios.alertphone.services.MainService;
 import ru.digios.alertphone.services.SmsService;
 import ru.digios.alertphone.services.SmsToSend;
 
 public class MainActivity extends AppCompatActivity {
-    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS =0 ;
+    private static final int MY_PERMISSIONS_REQUEST_SEND_SMS = 0;
+
+    private int currentAlarmStatus;
+
+    private Messenger mainService = null;
+
+    private TextView statusText = null;
 
     private EditText serverPhoneEdit = null;
     private EditText alarmIntervalEdit = null;
     private EditText alarmCountEdit = null;
     private EditText shakeThresholdEdit = null;
+
+    class IncomingHandler extends Handler {
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MainService.MSG_SET_ALARM_STATUS:
+                    setStatus(msg.arg1);
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+    }
+
+    final Messenger messenger = new Messenger(new IncomingHandler());
+
+    private ServiceConnection mainServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,  IBinder service) {
+
+            mainService = new Messenger(service);
+
+            try {
+                Message msg = Message.obtain(null, MainService.MSG_REGISTER_CLIENT);
+                msg.replyTo = messenger;
+                mainService.send(msg);
+
+                // Give it some value as an example.
+                /*msg = Message.obtain(null,
+                        MessengerService.MSG_SET_VALUE, this.hashCode(), 0);
+                mService.send(msg);*/
+            } catch (RemoteException e) {
+
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName className) {
+            mainService = null;
+        }
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,8 +98,10 @@ public class MainActivity extends AppCompatActivity {
         initInterface();
         requestPermissions();
 
-        Intent accelerometrSensorService = new Intent(this, AccelerometerSensorService.class);
-        startService(accelerometrSensorService);
+        bindService(new Intent(MainActivity.this, MainService.class), mainServiceConnection, Context.BIND_AUTO_CREATE);
+
+        /*Intent accelerometrSensorService = new Intent(this, AccelerometerSensorService.class);
+        startService(accelerometrSensorService);*/
     }
 
     @Override
@@ -86,11 +145,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void start(View view)
     {
-        saveSettings();
-        /*String value = readFromFile(this);
+        if (currentAlarmStatus != MainService.ALARM_STATUS_OFF) {
+            Intent service = new Intent(this, MainService.class);
+            service.putExtra("command", MainService.COMMAND_ALARM_START);
+            startService(service);
+        }
+        else {
+            Intent service = new Intent(this, MainService.class);
+            service.putExtra("command", MainService.COMMAND_ALARM_STOP);
+            startService(service);
+        }
 
-        TextView text = findViewById(R.id.statusText);
-        text.setText(value);*/
+        //saveSettings();
     }
 
     private void initInterface() {
@@ -98,6 +164,8 @@ public class MainActivity extends AppCompatActivity {
         alarmIntervalEdit = findViewById(R.id.alarmIntervalEdit);
         alarmCountEdit = findViewById(R.id.alarmCountEdit);
         shakeThresholdEdit = findViewById(R.id.shakeThresholdEdit);
+
+        statusText = findViewById(R.id.statusText);
     }
 
     private void requestPermissions()
@@ -120,33 +188,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private String readFromFile(Context context)
-    {
-        String ret = "";
+    private void setStatus(int status) {
+        currentAlarmStatus = status;
 
-        try {
-            InputStream inputStream = context.openFileInput("config.txt");
+        switch (status) {
+            case MainService.ALARM_STATUS_ALARM:
+                statusText.setText("ALARM");
+                break;
+            case MainService.ALARM_STATUS_OFF:
+                statusText.setText("OFF");
+                break;
+            case MainService.ALARM_STATUS_ON:
+                statusText.setText("ON");
+                break;
+            case MainService.ALARM_STATUS_READY:
+                statusText.setText("READY");
+                break;
+            default:
+                statusText.setText("...");
+                break;
 
-            if ( inputStream != null ) {
-                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-                String receiveString = "";
-                StringBuilder stringBuilder = new StringBuilder();
-
-                while ( (receiveString = bufferedReader.readLine()) != null ) {
-                    stringBuilder.append(receiveString);
-                }
-
-                inputStream.close();
-                ret = stringBuilder.toString();
-            }
         }
-        catch (FileNotFoundException e) {
-            Log.e("login activity", "File not found: " + e.toString());
-        } catch (IOException e) {
-            Log.e("login activity", "Can not read file: " + e.toString());
-        }
-
-        return ret;
     }
 }

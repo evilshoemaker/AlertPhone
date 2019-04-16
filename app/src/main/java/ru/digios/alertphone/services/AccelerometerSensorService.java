@@ -20,8 +20,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 
-import ru.digios.alertphone.SettingsActivity;
-
 public class AccelerometerSensorService extends Service implements SensorEventListener
 {
     float xAccel;
@@ -57,9 +55,9 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
         wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "21867216-040b-4672-8019-5ff9e0c39a05");
         wakeLock.acquire();
 
-        /*sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+        sm = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);*/
+        sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);
     }
 
     @Override
@@ -69,15 +67,9 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
         //wakeLock.release();
     }
 
+    @Override
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        if (sm == null || accelerometer == null)
-        {
-            sm = (SensorManager)getSystemService(SENSOR_SERVICE);
-            accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
-        }
-
         return Service.START_STICKY;
     }
 

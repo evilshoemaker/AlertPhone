@@ -17,10 +17,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:theme="@style/AppTheme.NoActionBar"></activity>
         <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -31,6 +27,7 @@
 
         <service android:name=".services.AccelerometerSensorService" android:enabled="true"/>
         <service android:name=".services.SmsService" android:enabled="true" />
+        <service android:name=".services.MainService" android:enabled="true" />
 
         <receiver android:name=".receivers.SmsReceiver">
             <intent-filter android:priority="100">
