@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">AlertPhone</string>
     <string name="title_activity_settings">SettingsActivity</string>
+    
+    <string name="device_message_alarm_ready">alarm_ready</string>
+    <string name="device_message_alarm_on">alarm_on</string>
+    <string name="device_message_alarm">alarm</string>
+    <string name="server_message_alarm_on">alarm_on</string>
+    <string name="server_message_alarm_off">alarm_off</string>
 </resources>
