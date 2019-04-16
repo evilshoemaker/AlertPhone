@@ -35,8 +35,10 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     boolean shakeInitiated = false;
     float shakeThreshold = 2.7f;
 
-    Sensor accelerometer;
-    SensorManager sm;
+    Sensor accelerometer = null;
+    SensorManager sm = null;
+
+
 
     private PowerManager.WakeLock wakeLock;
 
@@ -52,8 +54,9 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
         super.onCreate();
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "21867216-040b-4672-8019-5ff9e0c39a05");
+        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "21867216-040b-4672-8019-5ff9e0c39a05");
         wakeLock.acquire();
+
         /*sm = (SensorManager)getSystemService(SENSOR_SERVICE);
         accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_FASTEST);*/
@@ -63,14 +66,17 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     public void onDestroy() {
         super.onDestroy();
 
-        wakeLock.release();
+        //wakeLock.release();
     }
 
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        sm = (SensorManager)getSystemService(SENSOR_SERVICE);
-        accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        if (sm == null || accelerometer == null)
+        {
+            sm = (SensorManager)getSystemService(SENSOR_SERVICE);
+            accelerometer = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            sm.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL);
+        }
 
         return Service.START_STICKY;
     }

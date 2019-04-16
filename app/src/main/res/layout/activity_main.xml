@@ -9,25 +9,90 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="6dp">
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/til1"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="6dp">
+
+            <EditText
+                android:id="@+id/serverPhoneEdit"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Server phone number"
+                android:inputType="phone" />
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/til2"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="6dp">
+
+            <EditText
+                android:id="@+id/alarmIntervalEdit"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Alarm interval (ms)"
+                android:inputType="numberSigned"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/til3"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="6dp">
+
+            <EditText
+                android:id="@+id/alarmCountEdit"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Alarm count"
+                android:inputType="numberSigned"/>
+        </android.support.design.widget.TextInputLayout>
+
+        <android.support.design.widget.TextInputLayout
+            android:id="@+id/til4"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:layout_marginTop="6dp">
+
+            <EditText
+                android:id="@+id/shakeThresholdEdit"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:hint="Shake Threshold"
+                android:inputType="numberDecimal"/>
+        </android.support.design.widget.TextInputLayout>
 
         <Space
             android:layout_width="match_parent"
-            android:layout_weight="1"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
         <TextView
             android:id="@+id/statusText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Status"
-            android:textSize="28sp"
-            android:textAlignment="center" />
+            android:textAlignment="center"
+            android:textSize="28sp" />
 
         <Space
             android:layout_width="match_parent"
-            android:layout_weight="1"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
         <Button
             android:id="@+id/startButton"
@@ -35,20 +100,10 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="10dp"
             android:layout_marginRight="10dp"
+            android:layout_marginBottom="24dp"
             android:height="102dp"
             android:onClick="start"
             android:text="Start"
             android:textSize="24sp" />
-
-        <Button
-            android:id="@+id/settingsButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="50dp"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="50dp"
-            android:layout_marginBottom="50dp"
-            android:onClick="showSettings"
-            android:text="Settings" />
     </LinearLayout>
 </android.support.constraint.ConstraintLayout>
