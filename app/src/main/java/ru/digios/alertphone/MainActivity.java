@@ -23,14 +23,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import ru.digios.alertphone.core.Settings;
+import ru.digios.alertphone.services.AccelerometerSensorService;
 import ru.digios.alertphone.services.MainService;
 
 public class MainActivity extends AppCompatActivity {
     private static final int PERMISSIONS_REQUEST_SEND_SMS = 0;
 
-    private int currentAlarmStatus;
+    private int currentAlarmStatus = MainService.ALARM_STATUS_OFF;
 
     private Messenger mainService = null;
+    private boolean mBound;
+    private Intent mainServiceItent = null;
 
     private Button startButton = null;
     private TextView statusText = null;
@@ -63,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,  IBinder service) {
 
             mainService = new Messenger(service);
+            mBound = true;
 
             try {
                 Message msg = Message.obtain(null, MainService.MSG_REGISTER_CLIENT);
@@ -79,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName className) {
             mainService = null;
+            mBound = false;
         }
     };
 
@@ -91,7 +96,12 @@ public class MainActivity extends AppCompatActivity {
         initInterface();
         requestPermissions();
 
-        bindService(new Intent(MainActivity.this, MainService.class), mainServiceConnection, Context.BIND_AUTO_CREATE);
+        Intent accelerometrSensorService = new Intent(this, AccelerometerSensorService.class);
+        startService(accelerometrSensorService);
+
+        mainServiceItent = new Intent(this, MainService.class);
+        startService(mainServiceItent);
+
     }
 
     @Override
@@ -99,11 +109,18 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         loadSettings();
+        //bindService(mainServiceItent, mainServiceConnection, Context.BIND_AUTO_CREATE);
+        //bindService(new Intent(MainActivity.this, MainService.class), mainServiceConnection, /*Context.BIND_AUTO_CREATE*/0);
     }
 
     @Override
     public void onStop() {
         super.onStop();
+
+        if (mBound) {
+            //unbindService(mainServiceConnection);
+            mBound = false;
+        }
     }
 
     private void loadSettings() {

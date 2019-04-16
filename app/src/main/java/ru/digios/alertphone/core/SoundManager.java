@@ -1,5 +1,8 @@
 package ru.digios.alertphone.core;
 
+import android.content.Context;
+import android.media.MediaPlayer;
+import android.os.Handler;
 import android.util.Log;
 
 import java.text.SimpleDateFormat;
@@ -8,15 +11,27 @@ import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import ru.digios.alertphone.R;
+
 public class SoundManager {
 
     private long interval;
     private int alarmCount;
+    private int currentAlarmCount;
 
-    private Timer timer;
+    MediaPlayer sirenMediaPlayer;
+    MediaPlayer drwMediaPlayer;
 
-    public SoundManager() {
-        timer = new Timer();
+    Handler handler = new Handler();
+
+
+    public SoundManager(Context context) {
+
+        drwMediaPlayer = MediaPlayer.create(context, R.raw.drw);
+        drwMediaPlayer.setLooping(false);
+
+        sirenMediaPlayer = MediaPlayer.create(context, R.raw.sirena);
+        sirenMediaPlayer.setLooping(false);
     }
 
     public void setInterval(long interval) {
@@ -27,26 +42,43 @@ public class SoundManager {
         this.alarmCount = alarmCount;
     }
 
-    public void playAlarmSound() {
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                Calendar calendar = Calendar.getInstance();
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat(
-                        "dd:MMMM:yyyy HH:mm:ss a", Locale.getDefault());
-                final String strDate = simpleDateFormat.format(calendar.getTime());
-                Log.i("TEST_TIMER", strDate);
+    public void playSirenaSound() {
+        currentAlarmCount = 0;
 
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        sirenMediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                currentAlarmCount++;
+
+                if (currentAlarmCount < alarmCount) {
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            sirenMediaPlayer.start();
+                        }
+
+                    }, interval);
+                }
+                else {
+                    stopSirenaSound();
                 }
             }
-        }, 0, interval);
+        });
+
+        sirenMediaPlayer.start();
     }
 
-    public void stopAlarmSound() {
+    public void stopSirenaSound() {
+        if (drwMediaPlayer.isPlaying())
+            drwMediaPlayer.stop();
 
+        handler.removeCallbacksAndMessages(null);
+    }
+
+    public void playDrwSound() {
+        if (drwMediaPlayer.isPlaying())
+            drwMediaPlayer.stop();
+
+        drwMediaPlayer.start();
     }
 }

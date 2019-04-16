@@ -16,7 +16,6 @@ import android.util.Log;
 
 import java.util.ArrayList;
 
-import ru.digios.alertphone.R;
 import ru.digios.alertphone.core.SoundManager;
 import ru.digios.alertphone.core.Util;
 
@@ -48,7 +47,7 @@ public class MainService extends Service {
     private long alarmInterval;
     private float shakeThreshold;
     private int currentStatus = ALARM_STATUS_OFF;
-    private SoundManager soundManager = new SoundManager();
+    private SoundManager soundManager;
 
     ArrayList<Messenger> nClients = new ArrayList<Messenger>();
 
@@ -97,6 +96,8 @@ public class MainService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        soundManager = new SoundManager(this);
     }
 
     @Override
@@ -111,6 +112,10 @@ public class MainService extends Service {
         }
 
         String method = intent.getStringExtra("command");
+        if (method == null) {
+            return Service.START_STICKY;
+        }
+
         if (method.equals(COMMAND_ALARM_START))
         {
             serverPhoneNumber = Util.clearPhone(intent.getStringExtra("serverPhoneNumber"));
@@ -163,10 +168,12 @@ public class MainService extends Service {
 
         setStatus(ALARM_STATUS_ALARM);
         sendMessageAsync(serverPhoneNumber, DEVICE_MESSAGE_ALARM);
+
+        soundManager.playSirenaSound();
     }
 
     private void alarmReset() {
-
+        soundManager.stopSirenaSound();
     }
 
     private void alarmOff() {
@@ -227,6 +234,7 @@ public class MainService extends Service {
         }
         else if (currentStatus == ALARM_STATUS_ON
                 && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_OFF) > -1) {
+            soundManager.playDrwSound();
             alarmReady();
         }
         else if (currentStatus == ALARM_STATUS_ALARM

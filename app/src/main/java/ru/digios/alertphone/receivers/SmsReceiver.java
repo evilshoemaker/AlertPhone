@@ -29,17 +29,6 @@ public class SmsReceiver extends BroadcastReceiver {
                         text += msgs[i].getMessageBody().toString();
                     }
 
-                    /*SmsToReceive message = new SmsToReceive();
-                    message.setPhoneNumber(msgs[0].getOriginatingAddress());
-                    message.setText(text);
-
-                    Calendar calendar = Calendar.getInstance();
-                    calendar.setTimeInMillis(msgs[0].getTimestampMillis());
-                    message.setDate(calendar.getTime());
-
-                    Intent mIntent = new Intent(context, SmsService.class);
-                    mIntent.putExtra("message", message);
-                    context.startService(mIntent);*/
                     Intent mIntent = new Intent(context, MainService.class);
                     mIntent.putExtra("command", MainService.COMMAND_EXEC_MESSAGE);
                     mIntent.putExtra("phoneNumber", msgs[0].getOriginatingAddress());
