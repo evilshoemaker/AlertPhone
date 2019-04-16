@@ -103,12 +103,12 @@ public class MainService extends Service {
         }
 
         String method = intent.getStringExtra("command");
-        if (method == COMMAND_ALARM_START)
+        if (method.equals(COMMAND_ALARM_START))
         {
             alarmOn();
             //serverPhoneNumber = intent.getStringExtra("serverPhoneNumber");
         }
-        else if (method == COMMAND_ALARM_STOP)
+        else if (method.equals(COMMAND_ALARM_STOP))
         {
 
         }
@@ -127,7 +127,7 @@ public class MainService extends Service {
     }
 
     private void setStatus(int status) {
-        currentStatus = currentStatus;
+        currentStatus = status;
 
         try {
             Message msg = Message.obtain(null, MainService.MSG_SET_ALARM_STATUS, currentStatus, 0);

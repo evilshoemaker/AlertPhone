@@ -145,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void start(View view)
     {
-        if (currentAlarmStatus != MainService.ALARM_STATUS_OFF) {
+        if (currentAlarmStatus == MainService.ALARM_STATUS_OFF) {
             Intent service = new Intent(this, MainService.class);
             service.putExtra("command", MainService.COMMAND_ALARM_START);
             startService(service);
