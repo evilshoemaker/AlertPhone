@@ -109,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
 
         loadSettings();
-        //bindService(mainServiceItent, mainServiceConnection, Context.BIND_AUTO_CREATE);
+        bindService(mainServiceItent, mainServiceConnection, Context.BIND_AUTO_CREATE);
         //bindService(new Intent(MainActivity.this, MainService.class), mainServiceConnection, /*Context.BIND_AUTO_CREATE*/0);
     }
 
@@ -118,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         super.onStop();
 
         if (mBound) {
-            //unbindService(mainServiceConnection);
+            unbindService(mainServiceConnection);
             mBound = false;
         }
     }

@@ -50,7 +50,7 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
         super.onCreate();
 
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-        wakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "21867216-040b-4672-8019-5ff9e0c39a05");
+        wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK/*SCREEN_DIM_WAKE_LOCK*/, "21867216-040b-4672-8019-5ff9e0c39a05");
         wakeLock.acquire();
 
         sm = (SensorManager)getSystemService(SENSOR_SERVICE);
@@ -133,7 +133,7 @@ public class AccelerometerSensorService extends Service implements SensorEventLi
     private void executeShackeAction()
     {
         Intent intent = new Intent(this, MainService.class);
-        intent.putExtra("command", MainService.COMMAND_THRESSHOLD_TRIGGER);
+        intent.putExtra("command", MainService.COMMAND_THRESHOLD_TRIGGER);
         startService(intent);
     }
 }

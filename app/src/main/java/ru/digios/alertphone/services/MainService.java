@@ -13,9 +13,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.telephony.SmsManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
+import ru.digios.alertphone.core.Settings;
 import ru.digios.alertphone.core.SoundManager;
 import ru.digios.alertphone.core.Util;
 
@@ -35,7 +37,7 @@ public class MainService extends Service {
     public static final String COMMAND_ALARM_START = "ALARM_ON";
     public static final String COMMAND_ALARM_STOP = "ALARM_OFF";
     public static final String COMMAND_EXEC_MESSAGE = "INCOME_MESSAGE";
-    public static final String COMMAND_THRESSHOLD_TRIGGER = "THRESSHOLD_TRIGGER";
+    public static final String COMMAND_THRESHOLD_TRIGGER = "THRESHOLD_TRIGGER";
 
     public static final int MSG_REGISTER_CLIENT = 1;
     public static final int MSG_UNREGISTER_CLIENT = 2;
@@ -98,6 +100,7 @@ public class MainService extends Service {
         super.onCreate();
 
         soundManager = new SoundManager(this);
+        loadSettings();
     }
 
     @Override
@@ -139,12 +142,23 @@ public class MainService extends Service {
 
             handlingMessageAsync(phoneNumber, message);
         }
-        else if (method.equals(COMMAND_THRESSHOLD_TRIGGER))
+        else if (method.equals(COMMAND_THRESHOLD_TRIGGER))
         {
             alarm();
         }
 
         return Service.START_STICKY;
+    }
+
+    private void loadSettings() {
+        serverPhoneNumber = Settings.getInstance(this).getServerPhone();
+        alarmInterval = Settings.getInstance(this).getAlarmInterval();
+        alarmCount = Settings.getInstance(this).getAlarmCount();
+        shakeThreshold = Settings.getInstance(this).getShakeThreshold();
+        currentStatus = Settings.getInstance(this).getAlarmStatus();
+
+        soundManager.setAlarmCount(alarmCount);
+        soundManager.setInterval(alarmInterval);
     }
 
     private void alarmReady() {
@@ -183,6 +197,8 @@ public class MainService extends Service {
 
     private void setStatus(int status) {
         currentStatus = status;
+        Settings.getInstance(this).setAlarmStatus(currentStatus);
+        Settings.getInstance(this).save(this);
 
         try {
             Message msg = Message.obtain(null, MainService.MSG_SET_ALARM_STATUS, currentStatus, 0);
@@ -242,5 +258,10 @@ public class MainService extends Service {
             alarmReset();
             alarmReady();
         }
+    }
+
+    private void showMessage(String text) {
+        Toast toast = Toast.makeText(MainService.this, text, Toast.LENGTH_SHORT);
+        toast.show();
     }
 }

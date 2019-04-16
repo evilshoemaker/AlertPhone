@@ -15,6 +15,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 
+import ru.digios.alertphone.services.MainService;
+
 public class Settings {
     private static final String CONFIG_FILE_NAME = "config.json";
 
@@ -32,6 +34,7 @@ public class Settings {
     private long alarmInterval = 3000;
     private int alarmCount = 5;
     private float shakeThreshold = 2.7f;
+    private int alarmStatus = MainService.ALARM_STATUS_OFF;
 
     public void save(Context context)
     {
@@ -117,5 +120,13 @@ public class Settings {
 
     public void setShakeThreshold(float shakeThreshold) {
         this.shakeThreshold = shakeThreshold;
+    }
+
+    public int getAlarmStatus() {
+        return alarmStatus;
+    }
+
+    public void setAlarmStatus(int alarmStatus) {
+        this.alarmStatus = alarmStatus;
     }
 }
