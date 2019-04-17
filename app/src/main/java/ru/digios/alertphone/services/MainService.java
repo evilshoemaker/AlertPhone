@@ -25,6 +25,7 @@ public class MainService extends Service {
 
     private static final String SERVER_MESSAGE_ALARM_ON = "alarm_on";
     private static final String SERVER_MESSAGE_ALARM_OFF = "alarm_off";
+    private static final String SERVER_MESSAGE_OPEN = "open";
     private static final String DEVICE_MESSAGE_ALARM_READY = "alarm_ready";
     private static final String DEVICE_MESSAGE_ALARM_ON = "alarm_on";
     private static final String DEVICE_MESSAGE_ALARM = "alarm";
@@ -224,16 +225,18 @@ public class MainService extends Service {
             smsManager.sendTextMessage(phoneNumber, null, message, null, null);
         }
         else {
+            showMessage("SEND_SMS_PERMISSION_DENIED");
             Log.w("","SEND_SMS_PERMISSION_DENIED");
         }
     }
 
     private void handlingMessageAsync(final String phoneNumber, final String message) {
-        new Thread(new Runnable() {
+        handlingMessage(phoneNumber, message);
+        /*new Thread(new Runnable() {
             public void run () {
                 handlingMessage(phoneNumber, message);
             }
-        }).start();
+        }).start();*/
     }
 
     private void handlingMessage(final String phoneNumber, final String message) {
@@ -250,13 +253,18 @@ public class MainService extends Service {
         }
         else if (currentStatus == ALARM_STATUS_ON
                 && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_OFF) > -1) {
-            soundManager.playDrwSound();
             alarmReady();
         }
         else if (currentStatus == ALARM_STATUS_ALARM
                 && simpleMessage.indexOf(SERVER_MESSAGE_ALARM_OFF) > -1) {
             alarmReset();
             alarmReady();
+        }
+        else if ((currentStatus == ALARM_STATUS_ON || currentStatus == ALARM_STATUS_ALARM)
+                && simpleMessage.indexOf(SERVER_MESSAGE_OPEN) > -1) {
+            alarmReset();
+            alarmReady();
+            soundManager.playDrwSound();
         }
     }
 
